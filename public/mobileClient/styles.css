@@ -1,0 +1,54 @@
+
+html {
+    height: 100%;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+body {
+    height: 100%;
+    
+    padding: 0;
+    margin: 0;
+}
+
+#container {
+	width: 100%;
+	height: 100%;
+    position: relative;
+}
+
+#conceptTextInput {
+	padding-left: 10%;
+	padding-right: 10%;
+	text-align: center;
+}
+
+#conceptsDisplayElement {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	display: flex;
+	flex-direction: row;
+}
+
+.relatedConceptsDisplayElement {
+	height: 100%;
+	width: 10%;
+	display: flex;
+	flex-direction: column;
+}
+
+.conceptDisplayElement {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	width: 100%;
+	color: #ffffff;
+	font-family: 'Roboto', sans-serif;
+	font-size: 8px;
+	overflow: hidden;
+}
+
+
