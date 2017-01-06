@@ -116,26 +116,16 @@ function Serverer() {
 	};
 
 	self.initHttpServer = function() {
-		var https = require('https');
+		var http = require('http');
 		express = require('express');
 		app = express();
 		
-		var key_file = 'sslCert/server.key';
-		var cert_file = 'sslCert/server.crt';
-		var ca_file = 'sslCert/ca.crt';
-
-	 	var config = {
-			key: fs.readFileSync(key_file),
-		 	cert: fs.readFileSync(cert_file),
-		 	ca: fs.readFileSync(ca_file)
-		};
-
 		app.use(express.static(__dirname + PUBLIC_FOLDER_PATH));
 		app.get('/mobileClient', function(req, res){
 			res.sendFile(MOBILE_CLIENT_INDEX_PATH, {'root': __dirname});
 		});
 
-		httpServer = https.createServer(config, app);
+		httpServer = http.createServer(app);
 		httpServer.listen(MOBILE_CLIENT_SOCKET_PORT, function () {
 		  console.log('socket.io server listening on port', MOBILE_CLIENT_SOCKET_PORT);
 		});
