@@ -29,23 +29,20 @@ function Concepter(brain) {
 		//self.findConceptsRelatedToGivenConcept('chicken');
 	};
 
-	self.onRelatedConceptDataReturned = function(requestingConcept, relatedConceptData) {
+	self.onRelatedConceptDataReturned = function(requestingConcept, relatedConceptData, socket) {
 		console.log('onRelatedConceptDataReturned', requestingConcept, relatedConceptData);
 		//console.log(Object.keys(relatedConceptData));
-		brain.getServerer().sendRelatedConceptDataToMobileClient(requestingConcept, relatedConceptData);
+		brain.getServerer().sendRelatedConceptDataToMobileClient(requestingConcept, relatedConceptData, socket);
 	};
 
 	// Find related concepts using Microsofts Concept Graph
 	// https://concept.research.microsoft.com/Home/API
-	self.findConceptsRelatedToGivenConcept = function(concept) {
+	self.findConceptsRelatedToGivenConcept = function(concept, socket) {
 		
 		
 		//var body = '{"meat":0.23336869222609485,"animal":0.19290801636611607,"food":0.16729807546597969,"protein":0.092892862554932565,"ingredient":0.058342173056523713,"livestock":0.057432944385512955,"lean meat":0.052280648583118657,"poultry":0.050765267464767387,"item":0.048340657675405366,"dish":0.046370662221548717}';
 		//var relatedConceptData = JSON.parse(body);
 		//self.onRelatedConceptDataReturned(concept, relatedConceptData);
-		
-
-		//return;
 		
 
 		console.log('requesting related concepts for', concept);
@@ -60,7 +57,7 @@ function Concepter(brain) {
 		  if (!error && response.statusCode == 200) {
 		  	console.log('got a response!');
 		  	var relatedConceptData = JSON.parse(body);
-		    self.onRelatedConceptDataReturned(concept, relatedConceptData);
+		    self.onRelatedConceptDataReturned(concept, relatedConceptData, socket);
 		  }
 		});
 	}
@@ -106,8 +103,6 @@ function Serverer() {
 	var MOBILE_CLIENT_INDEX_PATH = MOBILE_CLIENT_FOLDER_PATH + '/index.html';
 	var MOBILE_CLIENT_SOCKET_PORT = 2323;
 
-	var mobileClientSocket;
-
 	self.init = function() {
 		console.log('creating serverer...');
 		fs = require('fs');
@@ -136,29 +131,29 @@ function Serverer() {
 		io.on('connection', function(socket) {
 			console.log('socket connection opened', socket.id);
 
-			mobileClientSocket = socket;
-
 			socket.on('disconnect', function(event) {
 				console.log('socket connection closed', socket.id);
 			});
 
-			socket.on('findConceptsRelatedToGivenConcept', self.handleFindConceptsRelatedToGivenConceptMessage);
+			socket.on('findConceptsRelatedToGivenConcept', function(message) {
+				self.handleFindConceptsRelatedToGivenConceptMessage(message, socket);
+			});
 		});
 	};
 
-	self.handleFindConceptsRelatedToGivenConceptMessage = function(message) {
+	self.handleFindConceptsRelatedToGivenConceptMessage = function(message, socket) {
 		var concept = message['concept'];
-		brain.getConcepter().findConceptsRelatedToGivenConcept(concept);
+		brain.getConcepter().findConceptsRelatedToGivenConcept(concept, socket);
 	};
 
-	self.sendRelatedConceptDataToMobileClient = function(requestingConcept, relatedConceptData) {
-		console.log('sendRelatedConceptDataToMobileClient');   
+	self.sendRelatedConceptDataToMobileClient = function(requestingConcept, relatedConceptData, socket) {
+		console.log('sendRelatedConceptDataToMobileClient');
 		var message = {
 			'requestingConcept': requestingConcept,
 			'relatedConceptData': relatedConceptData
 		};
-		if (mobileClientSocket != null) {
-			mobileClientSocket.emit('relatedConceptData', message);	
+		if (socket != null) {
+			socket.emit('relatedConceptData', message);	
 		}
 		
 	};
