@@ -10,7 +10,7 @@ function RelatedConceptsDisplay(brain, parent, relatedConcepts, color) {
 		displayElement = document.createElement('div');
 		displayElement.classList.add('relatedConceptsDisplayElement');
 		self.buildRelatedConceptsColumn();
-		self.reveal();
+		//self.reveal();
 	};
 
 	self.getDisplayElement = function() { return displayElement; }
@@ -32,8 +32,10 @@ function RelatedConceptsDisplay(brain, parent, relatedConcepts, color) {
 		for (var i=0; i<conceptDisplays.length; i++) {
 			var conceptDisplay = conceptDisplays[i];
 			if (conceptDisplay == clickedConceptDisplay) {
+				console.log('select', i);
 				conceptDisplay.select();
 			} else {
+				console.log('deselect', i);
 				conceptDisplay.deselect();
 			}
 		}
@@ -47,6 +49,21 @@ function RelatedConceptsDisplay(brain, parent, relatedConcepts, color) {
 			conceptDisplays.push(conceptDisplay);
 		}
 	};
+
+	self.populateConceptDisplayWithAnImage = function(imageSearchData, conceptDisplayIndex) {
+		//console.log('populateConceptDisplayWithAnImage', imageSearchData, conceptDisplayIndex);
+		
+		if (imageSearchData.length <= 0) {
+			return;
+		}
+
+		var numImages = imageSearchData.length;
+		var randIndex = Math.floor(Math.random() * numImages);
+
+		var imageUrl = imageSearchData[randIndex]['imageUrl'];
+		var conceptDisplay = conceptDisplays[conceptDisplayIndex];
+		conceptDisplay.populateImage(imageUrl);
+	}
 
 	self.reveal = function() {
 		for (var i=0; i<conceptDisplays.length; i++) {

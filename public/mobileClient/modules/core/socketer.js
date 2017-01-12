@@ -21,6 +21,7 @@ function Socketer(brain) {
 		});
 
 		socket.on('relatedConceptData', self.handleReceivedRelatedConceptData);
+		socket.on('imageSearchData', self.handleReceivedImageSearchData);
 	}
 
 	self.handleReceivedRelatedConceptData = function(message) {
@@ -29,12 +30,28 @@ function Socketer(brain) {
 		brain.getConceptsDisplayer().handleReceivedRelatedConceptData(requestingConcept, relatedConceptData);
 	};
 
+	self.handleReceivedImageSearchData = function(message) {
+		var searchQuery = message['searchQuery'];
+		var imageSearchData = message['imageSearchData'];
+		var relatedConceptsDisplayIndex = message['relatedConceptsDisplayIndex'];
+		var conceptDisplayIndex = message['conceptDisplayIndex'];
+		brain.getConceptsDisplayer().handleReceivedImageSearchData(searchQuery, imageSearchData, relatedConceptsDisplayIndex, conceptDisplayIndex);
+	};
 	
 	self.sendFindConceptsRelatedToGivenConceptMessageToServer = function(concept) {
 		var message = {
 			'concept': concept
 		};
 		self.sendMessageToServer('findConceptsRelatedToGivenConcept', message);
+	};
+
+	self.sendFindImagesForGivenSearchQueryMessageToServer = function(searchQuery, relatedConceptsDisplayIndex, conceptDisplayIndex) {
+		var message = {
+			'searchQuery': searchQuery,
+			'relatedConceptsDisplayIndex': relatedConceptsDisplayIndex,
+			'conceptDisplayIndex': conceptDisplayIndex
+		};
+		self.sendMessageToServer('findImagesForGivenSearchQuery', message);
 	};
 
 

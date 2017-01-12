@@ -12,11 +12,6 @@ function Brain() {
 	self.getConceptsDisplayer = function() { return conceptsDisplayer; }
 	self.getSocketer = function() { return socketer; }
 
-	self.findRelatedConceptsToGivenConcept = function(concept) {
-		console.log('findRelatedConceptsToGivenConcept', concept);
-		socketer.sendFindConceptsRelatedToGivenConceptMessageToServer(concept);
-	};
-
 	self.init();
 }
 

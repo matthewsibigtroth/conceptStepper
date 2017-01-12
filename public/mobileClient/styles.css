@@ -7,7 +7,6 @@ html {
 
 body {
     height: 100%;
-    
     padding: 0;
     margin: 0;
 }
@@ -44,11 +43,21 @@ body {
 	align-items: center;
 	justify-content: center;
 	flex: 1;
+	flex-direction: column;
 	width: 100%;
-	color: #ffffff;
 	font-family: 'Roboto', sans-serif;
 	font-size: 8px;
 	overflow: hidden;
 }
 
+.conceptImageBox {
+	width: 8vw; /* just a bit less than the width of the relatedConceptsDisplayElement column */
+	height: 8vw; /* and keep it square */
+	overflow: hidden;
+	border-radius: 50%;	
+	border-width: 0px;
+	border-style: solid;
+}
+
+	
 
