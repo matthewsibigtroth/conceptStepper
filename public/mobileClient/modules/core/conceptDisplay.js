@@ -2,47 +2,86 @@ function ConceptDisplay(brain, parent, concept, color) {
 
 	var self = this;
 	var displayElement;
+	var conceptImage;
+	var conceptImageBox;
+	var conceptText;
 	var position = {};
+	var SELECTED_OPACITY = 1;
+	var DESELECTED_OPACITY = .3;
 
 	self.init = function() {
 		displayElement = document.createElement('div');
 		displayElement.classList.add('conceptDisplayElement');
-		
-		displayElement.style.backgroundColor = color;
+		displayElement.style.opacity = 0;
 
-		var conceptText = document.createElement('div');
+		conceptImageBox = document.createElement('div');
+		conceptImageBox.classList.add('conceptImageBox');
+		conceptImageBox.style.borderColor = color;
+		
+		conceptImage = document.createElement('img');
+		conceptImage.style.maxHeight = '100%';
+		
+		conceptImage.addEventListener('load', self.onConceptImageLoad);
+		conceptImageBox.appendChild(conceptImage);
+		displayElement.appendChild(conceptImageBox);
+
+		conceptText = document.createElement('div');
+		conceptText.style.marginTop = '10px';
 		conceptText.textContent = concept;
-		displayElement.appendChild(conceptText);
+		displayElement.appendChild(conceptText);		
 
 		displayElement.addEventListener('click', self.onClick);
 	};
 
+
 	self.getDisplayElement = function() { return displayElement; }
 	self.getConcept = function() { return concept; }
 
-	self.onClick = function(event) {
-		parent.onConceptDisplayClick(self);
-	}
 
-	self.select = function() {
-		TweenLite.to(displayElement, .1, {
-			backgroundColor: '#cccccc',
-			scale: .9,
-			ease: Quint.easeout,
-			onComplete: function() {
-				TweenLite.to(displayElement, .1, {
-					scale:1,
-					ease: Quint.easeOut
-				});
-			}
+	self.onConceptImageLoad = function(event) {
+		TweenLite.fromTo(displayElement, .6, 
+		{
+			opacity: 0,
+			x: -100,
+		},
+		{
+			opacity: 1,
+			x: 0,
+			ease: Quint.easeOut
 		});
 	};
 
-	self.deselect = function() {
+	self.onClick = function(event) {
+		parent.onConceptDisplayClick(self);
+	};
+
+
+	self.select = function() {
 		TweenLite.to(displayElement, .6, {
-			backgroundColor: color,
+			opacity: SELECTED_OPACITY,
 			ease: Quint.easeOut
 		});
+		TweenLite.to(conceptImageBox, .6, {
+			borderWidth: 10,
+			ease: Quint.easeOut
+		});
+	};
+	
+	self.deselect = function() {
+		TweenLite.to(displayElement, .6, {
+			opacity: DESELECTED_OPACITY,
+			ease: Quint.easeOut
+		});
+		TweenLite.to(conceptImageBox, .6, {
+			borderWidth: 0,
+			ease: Quint.easeOut
+		});
+	};
+	
+
+	self.populateImage = function(imageUrl) {
+		//console.log('populateImage', imageUrl);
+		conceptImage.src = imageUrl;
 	};
 
 

@@ -26,14 +26,7 @@ function ConceptsDisplayer(brain) {
 	self.onConceptTextInputChange = function(event) {
 		self.clearDisplay();
 		var concept = conceptTextInput.value.trim().toLowerCase();
-		brain.findRelatedConceptsToGivenConcept(concept);
-	};
-
-	self.clearDisplay = function() {
-		for (var i=(relatedConceptsDisplays.length-1); i>=0; i--) {
-			var relatedConceptsDisplay = relatedConceptsDisplays[i];
-			self.removeRelatedConceptDisplay(relatedConceptsDisplay);
-		}
+		self.findRelatedConceptsToGivenConcept(concept);
 	};
 
 	self.onConceptDisplaySelected = function(relatedConceptsDisplayWithSelectedConcept) {
@@ -49,16 +42,41 @@ function ConceptsDisplayer(brain) {
 		}
 
 		var selectedConcept = relatedConceptsDisplayWithSelectedConcept.getSelectedConcept();
-		brain.findRelatedConceptsToGivenConcept(selectedConcept);
+		self.findRelatedConceptsToGivenConcept(selectedConcept);
+	};
+
+	self.clearDisplay = function() {
+		for (var i=(relatedConceptsDisplays.length-1); i>=0; i--) {
+			var relatedConceptsDisplay = relatedConceptsDisplays[i];
+			self.removeRelatedConceptDisplay(relatedConceptsDisplay);
+		}
+	};
+
+	self.findRelatedConceptsToGivenConcept = function(concept) {
+		console.log('findRelatedConceptsToGivenConcept', concept);
+		brain.getSocketer().sendFindConceptsRelatedToGivenConceptMessageToServer(concept);
 	};
 
 	self.handleReceivedRelatedConceptData = function(requestingConcept, relatedConceptData) {
 		console.log('handleReceivedRelatedConceptData', requestingConcept, relatedConceptData);
+		// Create the column display of related concepts
 		var color = RELATED_CONCEPT_DISPLAY_COLORS[relatedConceptsDisplays.length];
 		var relatedConcepts = Object.keys(relatedConceptData);
 		var relatedConceptsDisplay = new RelatedConceptsDisplay(brain, self, relatedConcepts, color);
 		conceptsDisplayElement.appendChild(relatedConceptsDisplay.getDisplayElement());
 		relatedConceptsDisplays.push(relatedConceptsDisplay);
+		// Find images for these concepts
+		for (var i=0; i<relatedConcepts.length; i++) {
+			var relatedConcept = relatedConcepts[i];
+			var relatedConceptsDisplayIndex = relatedConceptsDisplays.length - 1;
+			var conceptDisplayIndex = i;
+			self.findImagesForGivenSearchQuery(relatedConcept, relatedConceptsDisplayIndex, conceptDisplayIndex);
+		}
+	};
+
+	self.findImagesForGivenSearchQuery = function(searchQuery, relatedConceptsDisplayIndex, conceptDisplayIndex) {
+		console.log('findImagesForGivenSearchQuery', searchQuery, relatedConceptsDisplayIndex, conceptDisplayIndex);
+		brain.getSocketer().sendFindImagesForGivenSearchQueryMessageToServer(searchQuery, relatedConceptsDisplayIndex, conceptDisplayIndex);
 	};
 
 	self.removeRelatedConceptDisplay = function(relatedConceptsDisplay) {
@@ -67,8 +85,13 @@ function ConceptsDisplayer(brain) {
 		relatedConceptsDisplays.splice(indexOfRelatedConceptDisplay, 1);
 		// Remove it from the dom
 		conceptsDisplayElement.removeChild(relatedConceptsDisplay.getDisplayElement());
-
 	};
+
+	self.handleReceivedImageSearchData = function(searchQuery, imageSearchData, relatedConceptsDisplayIndex, conceptDisplayIndex) {
+		//console.log('handleReceivedImageSearchData', searchQuery, imageSearchData, relatedConceptsDisplayIndex, conceptDisplayIndex);
+		var relatedConceptsDisplay = relatedConceptsDisplays[relatedConceptsDisplayIndex];
+		relatedConceptsDisplay.populateConceptDisplayWithAnImage(imageSearchData, conceptDisplayIndex);
+	}
 
 	self.init();
 }

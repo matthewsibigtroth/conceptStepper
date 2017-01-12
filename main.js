@@ -2,18 +2,79 @@
 
 function Brain() {
 	var self = this;
+	var imager;
 	var concepter;
 	var serverer;
 
 	self.init = function() {
-		
 		serverer = new Serverer(self);
+		imager = new Imager(self);
 		concepter = new Concepter(self);
 		console.log('READY!');
 	};
 
+	self.getImager = function() { return imager; }
 	self.getConcepter = function() { return concepter; }
 	self.getServerer = function() { return serverer; }
+
+	self.init();
+}
+
+function Imager(brain) {
+	
+	var self = this;
+	var MS_IMAGE_SEARCH_API_KEY_1 = 'aeb6b973dd7a4a29847b5aa7e43c5ef9';
+	var MS_IMAGE_SEARCH_API_KEY_2 = 'eafff0a322f343a88d3d5c046e555686';
+	var MAX_NUM_IMAGE_RESULTS_PER_REQUEST = 25;
+	var request = require('request');
+
+	self.init = function() {
+		//self.findImagesForGivenSearchQuery('cats');
+	};
+
+	self.onImageSearchDataReturned = function(searchQuery, imageSearchData, relatedConceptsDisplayIndex, conceptDisplayIndex, socket) {
+		//console.log('onImageSearchDataReturned', searchQuery, imageSearchData);
+		brain.getServerer().sendImageSearchDataToMobileClient(searchQuery, imageSearchData, relatedConceptsDisplayIndex, conceptDisplayIndex, socket);
+	};
+
+	// Based on API at 
+	// https://msdn.microsoft.com/en-us/library/dn760791.aspx
+	self.findImagesForGivenSearchQuery = function(searchQuery, relatedConceptsDisplayIndex, conceptDisplayIndex, socket) {
+		console.log('findImagesForGivenSearchQuery', searchQuery);
+
+		/*
+		var value = [ { thumbnailUrl: 'https://tse4.mm.bing.net/th?id=OIP.x-ER3WkOYbzDFlCxo-SD9wEsC7&pid=Api' }, 
+			{ thumbnailUrl: 'https://tse4.mm.bing.net/th?id=OIP.Mc83636b31b8d0abff573b86efd63cb0dH0&pid=Api' },
+			{ thumbnailUrl: 'https://tse2.mm.bing.net/th?id=OIP.M42428010d527fc1225757ada9d9a8bccH0&pid=Api' } ];
+		var imageSearchData = {'value': value};
+		self.onImageSearchDataReturned(searchQuery, imageSearchData, relatedConceptsDisplayIndex, conceptDisplayIndex, socket);
+
+		return;
+		*/
+		
+
+		var baseUrl = 'https://api.cognitive.microsoft.com/bing/v5.0/images/search?';
+		var formattedSearchQuery = searchQuery.toLowerCase().trim().split(' ').join('+');;
+		var searchParam = 'q=' + formattedSearchQuery;
+		var countParam = '&count=' + MAX_NUM_IMAGE_RESULTS_PER_REQUEST.toString();
+		var marketParam = '&mkt=en-us';
+		var requestUrl = baseUrl + searchParam + countParam + marketParam;
+
+		var options = {
+  			url: requestUrl,
+  			headers: {
+    			'Ocp-Apim-Subscription-Key': MS_IMAGE_SEARCH_API_KEY_1
+  			}
+		};
+
+		request(options, function (error, response, body) {
+		  if (!error && response.statusCode == 200) {
+		  	console.log('got a response!');
+		  	var imageSearchData = JSON.parse(body);
+		  	self.onImageSearchDataReturned(searchQuery, imageSearchData, relatedConceptsDisplayIndex, conceptDisplayIndex, socket);
+		  }
+		});
+	};
 
 	self.init();
 }
@@ -24,6 +85,7 @@ function Concepter(brain) {
 	var self = this;
 	var request = require('request');
 	var MICROSOFT_CONCEPT_GRAPH_API_KEY = 'SP3gDwtR0akoQIsqm2vFWs1EAZ3KUMbK';
+	var MAX_NUM_CONCEPT_RESULTS_PER_REQUEST = 3;
 
 	self.init = function() {
 		//self.findConceptsRelatedToGivenConcept('chicken');
@@ -37,20 +99,20 @@ function Concepter(brain) {
 
 	// Find related concepts using Microsofts Concept Graph
 	// https://concept.research.microsoft.com/Home/API
-	self.findConceptsRelatedToGivenConcept = function(concept, socket) {
-		
-		
-		//var body = '{"meat":0.23336869222609485,"animal":0.19290801636611607,"food":0.16729807546597969,"protein":0.092892862554932565,"ingredient":0.058342173056523713,"livestock":0.057432944385512955,"lean meat":0.052280648583118657,"poultry":0.050765267464767387,"item":0.048340657675405366,"dish":0.046370662221548717}';
-		//var relatedConceptData = JSON.parse(body);
-		//self.onRelatedConceptDataReturned(concept, relatedConceptData);
-		
+	self.findConceptsRelatedToGivenConcept = function(concept, socket) {		
+		console.log('findConceptsRelatedToGivenConcept', concept);
 
-		console.log('requesting related concepts for', concept);
+		
+		/*
+		var relatedConceptData = { 'cat and mouse': 0.5435046539862404 };
+		self.onRelatedConceptDataReturned(concept, relatedConceptData, socket);
 
-		var maxNumRelatedConceptsToFind = 10;
+		return;
+		*/
+		
 
 		var baseUrl = 'https://concept.research.microsoft.com/api/Concept/ScoreByProb?instance=';
-		var suffixUrl = '&topK=' + maxNumRelatedConceptsToFind.toString() + '&api_key=';
+		var suffixUrl = '&topK=' + MAX_NUM_CONCEPT_RESULTS_PER_REQUEST.toString() + '&api_key=';
 		var requestUrl = baseUrl + concept + suffixUrl + MICROSOFT_CONCEPT_GRAPH_API_KEY;
 
 		request(requestUrl, function (error, response, body) {
@@ -62,31 +124,6 @@ function Concepter(brain) {
 		});
 	}
 
-	/*
-	self.findConceptsRelatedToGivenConcept = function(concept) {
-		//https://concept.research.microsoft.com/api/Concept/ScoreByProb?instance=chicken&topK=10&api_key=SP3gDwtR0akoQIsqm2vFWs1EAZ3KUMbK
-
-		var baseUrl = 'https://concept.research.microsoft.com/api/Concept/ScoreByProb?instance=';
-		var suffixUrl = '&topK=10&api_key=';
-		var requestUrl = baseUrl + concept + suffixUrl + MICROSOFT_CONCEPT_GRAPH_API_KEY;
-
-		var xhr = new XMLHttpRequest();
-		xhr.open("GET", requestUrl, true);
-		xhr.onload = function (e) {
-		  	if (xhr.readyState === 4) {
-		    	if (xhr.status === 200) {
-		      	console.log(xhr.responseText);
-		    	} else {
-		      	console.error(xhr.statusText);
-		    	}
-		  	}
-		};
-		xhr.onerror = function (e) {
-		  	console.error(xhr.statusText);
-		};
-		xhr.send(null);		
-	}
-	*/
 
 	self.init();
 }
@@ -138,12 +175,23 @@ function Serverer() {
 			socket.on('findConceptsRelatedToGivenConcept', function(message) {
 				self.handleFindConceptsRelatedToGivenConceptMessage(message, socket);
 			});
+
+			socket.on('findImagesForGivenSearchQuery', function(message) {
+				self.handlFindImagesForGivenSearchQueryMessage(message, socket);
+			});
 		});
 	};
 
 	self.handleFindConceptsRelatedToGivenConceptMessage = function(message, socket) {
 		var concept = message['concept'];
 		brain.getConcepter().findConceptsRelatedToGivenConcept(concept, socket);
+	};
+
+	self.handlFindImagesForGivenSearchQueryMessage = function(message, socket) {
+		var searchQuery = message['searchQuery'];
+		var relatedConceptsDisplayIndex = message['relatedConceptsDisplayIndex'];
+		var conceptDisplayIndex = message['conceptDisplayIndex'];
+		brain.getImager().findImagesForGivenSearchQuery(searchQuery, relatedConceptsDisplayIndex, conceptDisplayIndex, socket);
 	};
 
 	self.sendRelatedConceptDataToMobileClient = function(requestingConcept, relatedConceptData, socket) {
@@ -154,8 +202,35 @@ function Serverer() {
 		};
 		if (socket != null) {
 			socket.emit('relatedConceptData', message);	
+		}	
+	};
+
+	self.sendImageSearchDataToMobileClient = function(searchQuery, imageSearchData, relatedConceptsDisplayIndex, conceptDisplayIndex, socket) {
+		console.log('sendImageSearchDataToMobileClient');
+
+		// Trim the data before sending
+		var trimmedImageSearchData = [];
+		var imageResults = imageSearchData['value'];
+		for (var i=0; i<imageResults.length; i++) {
+			var imageResult = imageResults[i];
+			var trimmedImageSearchDatum = {
+				'imageUrl': imageResult['thumbnailUrl']
+			};
+			trimmedImageSearchData.push(trimmedImageSearchDatum)
 		}
-		
+
+		console.log(trimmedImageSearchData);
+
+		var message = {
+			'searchQuery': searchQuery,
+			'imageSearchData': trimmedImageSearchData,
+			'relatedConceptsDisplayIndex': relatedConceptsDisplayIndex,
+			'conceptDisplayIndex': conceptDisplayIndex
+		};
+
+		if (socket != null) {
+			socket.emit('imageSearchData', message);
+		}
 	};
 
 	self.init();
