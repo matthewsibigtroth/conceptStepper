@@ -19,7 +19,8 @@ function ConceptDisplay(brain, parent, concept, color) {
 		conceptImageBox.style.borderColor = color;
 		
 		conceptImage = document.createElement('img');
-		conceptImage.style.maxHeight = '100%';
+		//conceptImage.style.maxHeight = '100%';
+		conceptImage.classList.add('conceptImage');
 		
 		conceptImage.addEventListener('load', self.onConceptImageLoad);
 		conceptImageBox.appendChild(conceptImage);
@@ -39,6 +40,11 @@ function ConceptDisplay(brain, parent, concept, color) {
 
 
 	self.onConceptImageLoad = function(event) {
+		var imageWidth = conceptImage.naturalWidth;
+		var imageHeight = conceptImage.naturalHeight;
+
+		console.log(conceptText.innerText, imageWidth, imageHeight);
+
 		TweenLite.fromTo(displayElement, .6, 
 		{
 			opacity: 0,
